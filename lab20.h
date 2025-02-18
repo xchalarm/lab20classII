@@ -13,7 +13,7 @@ class Equipment{
 	int def;
 	public:
 		Equipment(int,int,int);
-		vector<int> getStat();			
+		vector<int> getStat();
 };
 
 class Unit{
@@ -54,9 +54,9 @@ Unit::Unit(string t,string n){
 	}
 	hp = hpmax;	
 	guard_on = false;
+	dodge_on = false;
 	equipment = NULL;
 }
-
 void Unit::showStatus(){
 	if(type == "Hero"){
 		cout << "---------------------------------------\n"; 
@@ -74,13 +74,19 @@ void Unit::showStatus(){
 
 void Unit::newTurn(){
 	guard_on = false; 
+	dodge_on = false;
 }
 
 int Unit::beAttacked(int oppatk){
 	int dmg;
+	int change = rand() % 2;
 	if(oppatk > def){
 		dmg = oppatk-def;	
 		if(guard_on) dmg = dmg/3;
+		if(dodge_on) {
+			if(change == 0) dmg = 0;
+			if(change == 1) dmg *= 2;
+		}
 	}	
 	hp -= dmg;
 	if(hp <= 0){hp = 0;}
@@ -92,6 +98,10 @@ int Unit::attack(Unit &opp){
 	return opp.beAttacked(atk);
 }
 
+int Unit::ultimateAttack(Unit &opp){
+	return opp.beAttacked(atk*2);
+}
+
 int Unit::heal(){
 	int h = rand()%21 + 10;
 	if(hp + h > hpmax) h = hpmax - hp;
@@ -101,11 +111,51 @@ int Unit::heal(){
 
 void Unit::guard(){
 	guard_on = true;
-}	
+}
+
+void Unit::dodge(){
+	dodge_on = true;
+}
 
 bool Unit::isDead(){
 	if(hp <= 0) return true;
 	else return false;
+}
+
+void Unit::equip(Equipment *item){
+	vector<int> stat;
+	if(equipment){
+		if(equipment->getStat() != item->getStat()){
+			stat = equipment->getStat();
+			hpmax -= stat[0];
+			atk   -= stat[1];
+			def   -= stat[2];
+			equipment = item;
+			stat = equipment->getStat();
+			hpmax += stat[0];
+			atk	  += stat[1];
+			def   += stat[2];
+		}
+	}
+	else{
+		equipment = item;
+		stat = equipment->getStat();
+		hpmax += stat[0];
+		atk   += stat[1];
+		def   += stat[2]; 
+	}
+	if(hp > hpmax) hp = hpmax;
+}
+
+Equipment::Equipment(int i,int j,int k){
+	hpmax = i;
+	atk   = j;
+	def   = k;
+}
+
+vector<int> Equipment::getStat(){
+	vector<int> temp = {hpmax, atk, def};
+	return temp;
 }
 
 void drawScene(char p_action,int p,char m_action,int m){
@@ -167,4 +217,3 @@ void playerLose(){
 	cout << "*                                                     *\n";
 	cout << "*******************************************************\n";
 };
-
